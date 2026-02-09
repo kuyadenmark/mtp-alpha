@@ -122,14 +122,12 @@ function normalizeProjects() {
 
   projects.forEach(p => {
     if (!p.id) {
-      p.id = Date.now().toString() + Math.random();
+      p.id = Date.now().toString();
       changed = true;
     }
   });
 
-  if (changed) {
-    saveProjects(projects);
-  }
+  if (changed) saveProjects(projects);
 }
 
 function login() {
@@ -144,206 +142,165 @@ function logout() {
 }
 
 function render() {
-  document.getElementById("login").classList.add("hidden");
-  document.getElementById("ceo").classList.add("hidden");
-  document.getElementById("manager").classList.add("hidden");
-  document.getElementById("expediter").classList.add("hidden");
-  document.getElementById("projectForm").classList.add("hidden");
+  ["login","ceo","manager","expediter","projectForm"].forEach(id =>
+    document.getElementById(id).classList.add("hidden")
+  );
 
   const role = localStorage.getItem("role");
   if (!role) {
-    document.getElementById("login").classList.remove("hidden");
+    login.classList.remove("hidden");
     return;
   }
 
-  normalizeProjects(); // Ensure all projects have an 'id'
+  normalizeProjects();
 
   if (role === "ceo") {
-    document.getElementById("ceo").classList.remove("hidden");
+    ceo.classList.remove("hidden");
     renderCEO();
   }
 
   if (role === "manager") {
-    document.getElementById("manager").classList.remove("hidden");
+    manager.classList.remove("hidden");
     renderManager();
   }
 
   if (role === "expediter") {
-    document.getElementById("expediter").classList.remove("hidden");
-    renderExpediter();  // Call expediter's render function
+    expediter.classList.remove("hidden");
+    renderExpediter();
   }
 }
 
 function renderCEO() {
-  const list = document.getElementById("ceoProjects");
-  const message = document.getElementById("noProjectsMessage");
+  const list = ceoProjects;
+  const msg = noProjectsMessage;
   const projects = getProjects();
 
-  list.innerHTML = "";  // Clear existing list
+  list.innerHTML = "";
 
-  // Check if there are any projects
   if (projects.length === 0) {
-    message.classList.remove("hidden");  // Show "No Available Projects" message
-  } else {
-    message.classList.add("hidden");  // Hide the message if projects exist
-    // Render the projects
-    projects.forEach(p => {
-      list.innerHTML += `
-        <div class="card">
-          <strong>${p.name}</strong><br>
-          Location: ${p.location || "-"}<br>
-          Budget: ${p.budget || "-"}<br>
-          Start: ${p.start || "-"}<br>
-          Target: ${p.target || "-"}<br>
-          Status: ${p.status || "-"}
-        </div>
-      `;
-    });
+    msg.classList.remove("hidden");
+    return;
   }
-}
 
-function renderManager() {
-  const list = document.getElementById("managerProjects");
-  list.innerHTML = "";
-  getProjects().forEach(p => {
-    list.innerHTML += `
-      <div class="card">
-        <strong>${p.name}</strong><br>
-        Location: ${p.location || "-"}<br>
-        Budget: ${p.budget || "-"}<br>
-        Start: ${p.start || "-"}<br>
-        Target: ${p.target || "-"}<br>
-        Status: ${p.status || "-"}<br><br>
-        <button class="btn-secondary" onclick="editProject('${p.id}')">Edit</button>
-        <button class="btn-danger" onclick="deleteProject('${p.id}')">Delete</button>
-      </div>
-    `;
-  });
-}
-
-function renderExpediter() {
-  const list = document.getElementById("expediterProjects");
-  list.innerHTML = "";
-  const projects = getProjects();
-
+  msg.classList.add("hidden");
   projects.forEach(p => {
     list.innerHTML += `
       <div class="card">
         <strong>${p.name}</strong><br>
         Location: ${p.location || "-"}<br>
         Budget: ${p.budget || "-"}<br>
-        Start: ${p.start || "-"}<br>
-        Target: ${p.target || "-"}<br>
-        Status: ${p.status || "-"}<br><br>
+        Status: ${p.status || "-"}
+      </div>`;
+  });
+}
+
+function renderManager() {
+  managerProjects.innerHTML = "";
+  getProjects().forEach(p => {
+    managerProjects.innerHTML += `
+      <div class="card">
+        <strong>${p.name}</strong><br>
+        Budget: ${p.budget || "-"}<br><br>
+        <button class="btn-secondary" onclick="editProject('${p.id}')">Edit</button>
+        <button class="btn-danger" onclick="deleteProject('${p.id}')">Delete</button>
+      </div>`;
+  });
+}
+
+function renderExpediter() {
+  expediterProjects.innerHTML = "";
+  getProjects().forEach(p => {
+    expediterProjects.innerHTML += `
+      <div class="card">
+        <strong>${p.name}</strong><br>
+        Budget: ${p.budget || "-"}<br><br>
 
         <h3>Expenses</h3>
         <div id="expenses-${p.id}"></div>
-        <input id="newExpense-${p.id}" type="number" placeholder="Enter expense amount">
-        <button class="btn-primary" onclick="addExpense(${p.id})">Add Expense</button>
-      </div>
-    `;
+        <input id="newExpense-${p.id}" type="number" placeholder="Expense amount">
+        <button class="btn-primary" onclick="addExpense('${p.id}')">Add Expense</button>
+      </div>`;
     renderExpenses(p.id);
   });
 }
 
 function renderExpenses(projectId) {
-  const expensesContainer = document.getElementById(`expenses-${projectId}`);
   const projects = getProjects();
   const project = projects.find(p => p.id === projectId);
+  if (!project) return;
 
-  let totalExpenses = 0;
+  const box = document.getElementById(`expenses-${projectId}`);
+  box.innerHTML = "";
 
-  expensesContainer.innerHTML = ""; // Reset expenses list
+  let total = 0;
+  project.expenses = project.expenses || [];
 
-  // If the project has expenses, loop through and display them
-  if (project.expenses) {
-    project.expenses.forEach((expense, index) => {
-      totalExpenses += expense.amount;
-      expensesContainer.innerHTML += `
-        <div class="card">
-          <strong>Expense #${index + 1}: ${expense.amount}</strong><br>
-          <button class="btn-danger" onclick="deleteExpense(${projectId}, ${index})">Delete</button>
-        </div>
-      `;
-    });
-  }
+  project.expenses.forEach((e, i) => {
+    total += e.amount;
+    box.innerHTML += `
+      <div>
+        ₱${e.amount}
+        <button class="btn-danger" onclick="deleteExpense('${projectId}', ${i})">x</button>
+      </div>`;
+  });
 
-  // Update the budget and remaining balance
-  const remainingBudget = project.budget - totalExpenses;
-  expensesContainer.innerHTML += `<br><strong>Total Expenses: ${totalExpenses}</strong><br>`;
-  expensesContainer.innerHTML += `<strong>Remaining Budget: ${remainingBudget}</strong>`;
+  box.innerHTML += `<br><strong>Total: ₱${total}</strong>`;
 }
 
 function addExpense(projectId) {
-  const expenseAmount = parseFloat(document.getElementById(`newExpense-${projectId}`).value);
+  const input = document.getElementById(`newExpense-${projectId}`);
+  const amount = Number(input.value);
 
-  // Ensure the expense amount is valid
-  if (!expenseAmount || expenseAmount <= 0) {
-    alert("Please enter a valid expense amount.");
+  if (!amount || amount <= 0) {
+    alert("Invalid amount");
     return;
   }
 
   const projects = getProjects();
   const project = projects.find(p => p.id === projectId);
 
-  // If the project does not have an expenses array, initialize it
-  if (!project.expenses) project.expenses = [];
-  project.expenses.push({ amount: expenseAmount });
+  project.expenses = project.expenses || [];
+  project.expenses.push({ amount });
 
-  // Save the updated projects to localStorage
   saveProjects(projects);
-
-  // Re-render the Expediter dashboard to reflect the updated expenses
-  renderExpediter();  // Re-render the expenses for that project
+  renderExpediter();
 }
 
-function deleteExpense(projectId, expenseIndex) {
+function deleteExpense(projectId, index) {
   const projects = getProjects();
   const project = projects.find(p => p.id === projectId);
 
-  // Remove the expense from the array
-  project.expenses.splice(expenseIndex, 1);
-
-  // Save the updated projects to localStorage
+  project.expenses.splice(index, 1);
   saveProjects(projects);
-
-  // Re-render the expenses list
-  renderExpediter();  // Re-render the list after removing expense
+  renderExpediter();
 }
 
 function openCreate() {
   editId = null;
-  document.getElementById("formTitle").innerText = "Create Project";
-  document.getElementById("projectForm").classList.remove("hidden");
+  formTitle.innerText = "Create Project";
+  projectForm.classList.remove("hidden");
 }
 
 function editProject(id) {
   const p = getProjects().find(x => x.id === id);
   editId = id;
-  document.getElementById("formTitle").innerText = "Edit Project";
   pName.value = p.name;
   pLocation.value = p.location;
   pBudget.value = p.budget;
   pStart.value = p.start;
   pTarget.value = p.target;
   pStatus.value = p.status;
-  document.getElementById("projectForm").classList.remove("hidden");
+  projectForm.classList.remove("hidden");
 }
 
 function saveProject() {
-  const name = pName.value.trim();
-  if (!name) {
-    alert("Project name is required");
-    return;
-  }
+  if (!pName.value.trim()) return alert("Project name required");
 
   const projects = getProjects();
-
   if (editId) {
-    const p = projects.find(x => x.id === editId);
-    Object.assign(p, collectData(name));
+    Object.assign(projects.find(p => p.id === editId), collect());
   } else {
-    projects.push({ id: Date.now().toString(), ...collectData(name) });
+    projects.push({ id: Date.now().toString(), ...collect() });
   }
 
   saveProjects(projects);
@@ -351,14 +308,15 @@ function saveProject() {
   render();
 }
 
-function collectData(name) {
+function collect() {
   return {
-    name,
+    name: pName.value,
     location: pLocation.value,
-    budget: pBudget.value,
+    budget: Number(pBudget.value),
     start: pStart.value,
     target: pTarget.value,
-    status: pStatus.value
+    status: pStatus.value,
+    expenses: []
   };
 }
 
@@ -368,9 +326,8 @@ function deleteProject(id) {
 }
 
 function closeForm() {
-  document.getElementById("projectForm").classList.add("hidden");
-  pName.value = pLocation.value = pBudget.value =
-  pStart.value = pTarget.value = pStatus.value = "";
+  projectForm.classList.add("hidden");
+  [pName,pLocation,pBudget,pStart,pTarget,pStatus].forEach(i => i.value = "");
 }
 
 render();
