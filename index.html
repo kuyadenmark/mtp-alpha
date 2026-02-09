@@ -146,16 +146,19 @@ function render() {
 
   const role = localStorage.getItem("role");
 
+  // ✅ NO ROLE → SHOW LOGIN
   if (!role) {
     if (login) login.classList.remove("hidden");
     return;
   }
 
+  // ✅ ROLE EXISTS → SHOW DASHBOARD
   if (role === "CEO" && ceo) ceo.classList.remove("hidden");
   if (role === "Manager" && manager) manager.classList.remove("hidden");
   if (role === "Expediter" && expediter) expediter.classList.remove("hidden");
 }
 </script>
+
 
 function renderCEO() {
   const list = ceoProjects;
