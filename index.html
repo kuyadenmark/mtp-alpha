@@ -106,6 +106,25 @@
 </div>
 
 <script>
+  const login = document.getElementById("login");
+const ceo = document.getElementById("ceo");
+const manager = document.getElementById("manager");
+const expediter = document.getElementById("expediter");
+const projectForm = document.getElementById("projectForm");
+
+const ceoProjects = document.getElementById("ceoProjects");
+const managerProjects = document.getElementById("managerProjects");
+const expediterProjects = document.getElementById("expediterProjects");
+const noProjectsMessage = document.getElementById("noProjectsMessage");
+
+const pName = document.getElementById("pName");
+const pLocation = document.getElementById("pLocation");
+const pBudget = document.getElementById("pBudget");
+const pStart = document.getElementById("pStart");
+const pTarget = document.getElementById("pTarget");
+const pStatus = document.getElementById("pStatus");
+const formTitle = document.getElementById("formTitle");
+
 let editId = null;
 
 function getProjects() {
