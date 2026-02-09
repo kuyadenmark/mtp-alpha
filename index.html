@@ -122,26 +122,37 @@ function logout() {
   location.reload();
 }
 
-/* ===== RENDER ===== */
+  <script>
+  const login = document.getElementById("login");
+  const ceo = document.getElementById("ceo");
+  const manager = document.getElementById("manager");
+  const projectForm = document.getElementById("projectForm");
+</script>
+
 function render() {
+  if (!login || !ceo || !manager || !projectForm) {
+    console.error("Render failed: missing DOM elements");
+    return;
+  }
+
   login.classList.add("hidden");
   ceo.classList.add("hidden");
   manager.classList.add("hidden");
   projectForm.classList.add("hidden");
 
   const role = localStorage.getItem("role");
+
   if (!role) {
     login.classList.remove("hidden");
     return;
   }
 
-  if (role === "ceo") {
+  if (role === "CEO") {
     ceo.classList.remove("hidden");
-    renderCEO();
   }
-  if (role === "manager") {
+
+  if (role === "Manager") {
     manager.classList.remove("hidden");
-    renderManager();
   }
 }
 
