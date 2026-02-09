@@ -129,32 +129,33 @@ function logout() {
   const projectForm = document.getElementById("projectForm");
 </script>
 
+<script>
 function render() {
-  if (!login || !ceo || !manager || !projectForm) {
-    console.error("Render failed: missing DOM elements");
-    return;
-  }
+  const login = document.getElementById("login");
+  const ceo = document.getElementById("ceo");
+  const manager = document.getElementById("manager");
+  const expediter = document.getElementById("expediter");
+  const projectForm = document.getElementById("projectForm");
 
-  login.classList.add("hidden");
-  ceo.classList.add("hidden");
-  manager.classList.add("hidden");
-  projectForm.classList.add("hidden");
+  const sections = [login, ceo, manager, expediter, projectForm];
+
+  // hide everything safely
+  sections.forEach(el => {
+    if (el) el.classList.add("hidden");
+  });
 
   const role = localStorage.getItem("role");
 
   if (!role) {
-    login.classList.remove("hidden");
+    if (login) login.classList.remove("hidden");
     return;
   }
 
-  if (role === "CEO") {
-    ceo.classList.remove("hidden");
-  }
-
-  if (role === "Manager") {
-    manager.classList.remove("hidden");
-  }
+  if (role === "CEO" && ceo) ceo.classList.remove("hidden");
+  if (role === "Manager" && manager) manager.classList.remove("hidden");
+  if (role === "Expediter" && expediter) expediter.classList.remove("hidden");
 }
+</script>
 
 function renderCEO() {
   const list = ceoProjects;
